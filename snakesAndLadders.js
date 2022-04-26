@@ -1,3 +1,67 @@
+const createPlayer = function (name) {
+  return player = {
+    name: name,
+    position: 0,
+    hasWon: false
+  };
+};
+
+const rollDice = function () {
+  return Math.ceil(Math.random() * 6);
+};
+
+const snakeTail = function (position, board) {
+  return board.snakes[position];
+};
+
+const ladderTop = function (position, board) {
+  return board.ladders[position];
+};
+
+const newPosition = function (position, board) {
+  const nextPosition = position + rollDice();
+  const snakeBite = snakeTail(nextPosition, board);
+  const ladderClimb = ladderTop(nextPosition, board);
+  return snakeBite || ladderClimb || nextPosition;
+};
+
+const playRound = function (player, board) {
+  const nextPosition = newPosition(player.position, board);
+  const hasWon = nextPosition >= board.target;
+  return { name: player.name, position: nextPosition, hasWon: hasWon };
+};
+
+const isPlaying = function (player) {
+  return !player.hasWon;
+};
+
+const playerStats = function (stats, player) {
+  stats[player.name] = player.position;
+  return stats;
+};
+
+const generateStats = function (player) {
+  return player.reduce(playerStats, {});
+};
+
+const noWinner = function (players) {
+  return players.every(isPlaying);
+};
+
+const snakesAndLadders = function (playerNames, board) {
+  let players = playerNames.map(createPlayer);
+  const gameStats = [];
+
+  while (noWinner(players)) {
+    players = players.map(function (player) {
+      return playRound(player, board);
+    });
+    gameStats.push(generateStats(players));
+  }
+
+  return gameStats;
+};
+
 const snakes = {
   9: 4,
   13: 8,
@@ -11,67 +75,12 @@ const ladders = {
   15: 21
 };
 
-const createPlayer = function (name) {
-  return player = {
-    name: name,
-    position: 0,
-    status: 'playing'
-  };
-};
-
-const rollDice = function () {
-  return Math.ceil(Math.random() * 6);
-};
-
-const snakeTail = function (position, board) {
-  return board.snakes[position]
-};
-
-const ladderTop = function (position, board) {
-  return board.ladders[position]
-};
-
-const newPosition = function (position, board) {
-  const nextPosition = position + rollDice();
-  const snakeBite = snakeTail(nextPosition, board);
-  const ladderClimb = ladderTop(nextPosition, board);
-  return snakeBite || ladderClimb || nextPosition;
-};
-
-const runRound = function (player, board) {
-  const nextPosition = newPosition(player.position, board);
-  const status = nextPosition >= board.target ? 'won' : 'playing';
-  return { name: player.name, position: nextPosition, status: status };
-};
-
-const isplaying = function (player) {
-  return player.status === 'playing';
-};
-
-const isWon = function (player) {
-  return player.status === 'won';
-};
-
-const generateStats = function (player1, player2) {
-  const stats = {};
-  stats[player1.name] = player1.position;
-  stats[player2.name] = player2.position;
-  return stats;
-};
-
-const snakesAndLadders = function (firstPlayer, secondPlayer, board) {
-  let player1 = createPlayer(firstPlayer);
-  let player2 = createPlayer(secondPlayer);
-  const gameStats = [];
-
-  while ([player1, player2].every(isplaying)) {
-    player1 = runRound(player1, board);
-    player2 = runRound(player2, board);
-    gameStats.push(generateStats(player1, player2));
-  }
-
-  console.table(gameStats);
-  return [player1, player2].find(isWon).name;
+const determineWinner = function (gameResult) {
+  const target = 25;
+  const lastRound = gameResult[gameResult.length - 1];
+  return Object.keys(lastRound).find(function (player) {
+    return lastRound[player] >= target;
+  });
 };
 
 const board = {
@@ -80,4 +89,12 @@ const board = {
   ladders: ladders
 };
 
-console.log(snakesAndLadders('venkata', 'sai', board), 'Won!');
+const main = function () {
+  const players = ['venkata', 'sai'];
+  const gameResult = snakesAndLadders(players, board);
+  const winner = determineWinner(gameResult);
+  console.table(gameResult);
+  console.log(winner, 'Won');
+};
+
+main();
